@@ -13,6 +13,7 @@ iarduino_RF433_Receiver radio(3);                         // Создаём об
 MillisTimer timer = MillisTimer();
 bool timerStatus = false;
 String timerState = "OFF";
+unsigned long DEFAULT_TIMEOUT = 2400000;
 
 void initRadio() {
     radio.begin();                                        // Инициируем работу приёмника MX-RM-5V (в качестве параметра можно указать скорость ЧИСЛО бит/сек, тогда можно не вызывать функцию setDataRate)
@@ -31,19 +32,25 @@ void initLcd() {
     delay(1000);
 }
 
-void renderTimer(MillisTimer &mt) {
-    lcd.setCursor(0, 1);
-    unsigned long currentTimerValue = mt.getRemainingTime();
-    long minutes = (currentTimerValue / 1000)  / 60;
-    int seconds = (int)((currentTimerValue / 1000) % 60);
-    lcd.print(minutes);
-    lcd.setCursor(2, 1);
-    lcd.print(":");
-    lcd.setCursor(3, 1);
-    lcd.print(seconds);
+String checkZeroSign(int value) {
+    if (value < 10) {
+        return "0" + String(value);
+    }
+    return String(value);
 }
 
-// после истечение таймер на дисплее не останавливается
+String formatTime(unsigned long timerValue) {
+    String minutes = checkZeroSign((timerValue / 1000)  / 60);
+    String seconds = checkZeroSign((timerValue / 1000) % 60);
+
+    return minutes + ":" + seconds;
+}
+
+void renderTimer(MillisTimer &mt) {
+    lcd.setCursor(0, 1);
+    lcd.print(formatTime(mt.getRemainingTime()));
+}
+
 void expireTimer(MillisTimer &mt) {
     timerState = "EXPIRED";
     mt.reset();
@@ -60,7 +67,7 @@ void resetTimer(MillisTimer &mt) {
 
 void startTimer(MillisTimer &mt) {
     timerState = "RUNNING";
-    mt.setInterval(2400000);
+    mt.setInterval(DEFAULT_TIMEOUT);
     mt.expiredHandler(expireTimer);
     mt.setRepeats(1);
     mt.start();
