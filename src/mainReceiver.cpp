@@ -50,8 +50,7 @@ String formatTime(unsigned long timerValue) {
 
 void renderTimer(MillisTimer &mt) {
     lcd.setCursor(0, 1);
-    lcd.print('       ');
-    lcd.print(formatTime(mt.getRemainingTime()));
+    lcd.print(formatTime(mt.getRemainingTime()) + "  ");
 }
 
 void expireTimer(MillisTimer &mt) {
