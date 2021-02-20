@@ -96,7 +96,7 @@ void loop() {
 
   // sensorData[2] = {
   //   sensorId: 3,
-  //   sensorValue: getWaterTemperarure()
+  //   sensorValue: getWaterTemperature()
   // };
   Serial.print("Sending data");
   radio.write(&sensorData, sizeof(sensorData));              // отправляем данные из массива data указывая сколько байт массива мы хотим отправить
