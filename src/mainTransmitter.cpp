@@ -1,7 +1,3 @@
-/**
- * https://www.codesdope.com/cpp-array-of-objects/ — создание массива объектов
- */
-
 #include <Arduino.h>
 #include <iarduino_RF433_Transmitter.h>                   // Подключаем библиотеку для работы с передатчиком FS1000A
 #include "SensorData.h"
