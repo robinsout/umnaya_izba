@@ -7,6 +7,8 @@
 #include "SensorData.h"
 SensorData sensorData[2];
 
+int radioStatusLedPin = A0;
+
 rgb_lcd lcd;
 iarduino_RF433_Receiver radio(3);                         // Создаём объект radio для работы с библиотекой iarduino_RF433, указывая номер вывода к которому подключён приёмник (можно подключать только к выводам использующим внешние прерывания)
 
@@ -48,6 +50,7 @@ String formatTime(unsigned long timerValue) {
 
 void renderTimer(MillisTimer &mt) {
     lcd.setCursor(0, 1);
+    lcd.print('       ');
     lcd.print(formatTime(mt.getRemainingTime()));
 }
 
@@ -77,14 +80,15 @@ void setup(){
     initLcd();
     initRadio();
     resetTimer(timer);
+
+    pinMode(radioStatusLedPin, OUTPUT);
 }
 
 void loop(){
     if(radio.available()){   
-        lcd.setRGB(0, 155, 0);
+        digitalWrite(radioStatusLedPin, 25);
         lcd.setCursor(0, 0);
         lcd.print("Timer    Temp.  ");
-
 
         radio.read(&sensorData, sizeof(sensorData));                  // Читаем данные в массив data и указываем сколько байт читать
 
@@ -106,7 +110,7 @@ void loop(){
         lcd.print(sensorDuo.sensorValue);
         delay(100);
     } else {
-        lcd.setRGB(100, 100, 100);
+        digitalWrite(radioStatusLedPin, 0);
     }                                                    // Если вызвать функцию available с параметром в виде ссылки на переменную типа uint8_t, то мы получим номер трубы, по которой пришли данные (см. урок 26.5)
     
     if (timer.isRunning() & !timer.expired()) {
