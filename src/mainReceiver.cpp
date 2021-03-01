@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "rgb_lcd.h"
+#include <LiquidCrystal_I2C.h>
 #include <iarduino_RF433_Receiver.h>                      // Подключаем библиотеку для работы с приёмником MX-RM-5V
 #include "MillisTimer.h"
 
@@ -9,7 +9,8 @@ SensorData sensorData[2];
 
 int radioStatusLedPin = A0;
 
-rgb_lcd lcd;
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+
 iarduino_RF433_Receiver radio(3);                         // Создаём объект radio для работы с библиотекой iarduino_RF433, указывая номер вывода к которому подключён приёмник (можно подключать только к выводам использующим внешние прерывания)
 
 MillisTimer timer = MillisTimer();
@@ -28,8 +29,8 @@ void initRadio() {
 }
 
 void initLcd() {
-    lcd.begin(16, 2);
-    lcd.setRGB(150, 10, 150);
+    lcd.begin();
+    lcd.backlight();
     lcd.print("= UMNAYA BANYA =");
     delay(1000);
 }
