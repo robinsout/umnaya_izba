@@ -3,9 +3,16 @@
 #include <Arduino.h>
 #include <iarduino_RF433_Transmitter.h>                   // Подключаем библиотеку для работы с передатчиком FS1000A
 #include "SensorData.h"
+#include <SHT1x.h>
+
+// Specify data and clock connections and instantiate SHT1x object
+#define dataPin  6
+#define clockPin 5
+
+SHT1x sht1x(dataPin, clockPin);
 
 iarduino_RF433_Transmitter radio(12);                     // Создаём объект radio для работы с библиотекой iarduino_RF433, указывая номер вывода к которому подключён передатчик
-SensorData sensorData[2];
+SensorData sensorData[4];
 
 const int ledPin = 13;
 
@@ -63,6 +70,13 @@ float getAirTemperature() {
   return temperature;
 }
 
+float getSteamRoomHumidity() {
+  return sht1x.readHumidity();
+};
+
+float getSteamRoomAirTemperature() {
+  return sht1x.readTemperatureC();
+};
 
 void initRadio() {  
   radio.begin();                                        // Инициируем работу передатчика FS1000A (в качестве параметра можно указать скорость ЧИСЛО бит/сек, тогда можно не вызывать функцию setDataRate)
@@ -85,17 +99,26 @@ void loop() {
     sensorId: 1,
     sensorValue: float(buttonState)
   };
-
-
   sensorData[1] = {
     sensorId: 2,
     sensorValue: getAirTemperature()
   };
+  sensorData[2] = {
+    sensorId: 3,
+    sensorValue: getSteamRoomAirTemperature()
+  };
+  sensorData[3] = {
+    sensorId: 4,
+    sensorValue: getSteamRoomHumidity()
+  };
 
-  // sensorData[2] = {
+  // sensorData[4] = {
   //   sensorId: 3,
   //   sensorValue: getWaterTemperature()
   // };
-  Serial.print("Sending data");
+
+  delay(1000);
+
+  Serial.println("Sending data");
   radio.write(&sensorData, sizeof(sensorData));              // отправляем данные из массива data указывая сколько байт массива мы хотим отправить
 }

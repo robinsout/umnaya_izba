@@ -5,7 +5,7 @@
 #include "MillisTimer.h"
 
 #include "SensorData.h"
-SensorData sensorData[2];
+SensorData sensorData[4];
 
 int radioStatusLedPin = A0;
 
@@ -50,22 +50,22 @@ String formatTime(unsigned long timerValue) {
 }
 
 void renderTimer(MillisTimer &mt) {
-    lcd.setCursor(0, 1);
+    lcd.setCursor(10, 0);
     lcd.print(formatTime(mt.getRemainingTime()) + "  ");
 }
 
 void expireTimer(MillisTimer &mt) {
     timerState = "EXPIRED";
     mt.reset();
-    lcd.setCursor(0, 1);
+    lcd.setCursor(10, 0);
     lcd.print("EXPIRED");
 }
 
 void resetTimer(MillisTimer &mt) {
     timerState = "OFF";
     mt.reset();
-    lcd.setCursor(0, 1);
-    lcd.print(" OFF  ");
+    lcd.setCursor(10, 0);
+    lcd.print("OFF   ");
 }
 
 void startTimer(MillisTimer &mt) {
@@ -77,6 +77,7 @@ void startTimer(MillisTimer &mt) {
 }
 
 void setup(){
+    Serial.begin(9600);
     initLcd();
     initRadio();
     resetTimer(timer);
@@ -88,7 +89,14 @@ void loop(){
     if(radio.available()){   
         digitalWrite(radioStatusLedPin, 25);
         lcd.setCursor(0, 0);
-        lcd.print("Timer    Temp.  ");
+        lcd.print("Timer     ");
+        lcd.setCursor(0, 1);
+        lcd.print("Air temp1");
+        lcd.setCursor(0, 2);
+        lcd.print("Humidity");
+        lcd.setCursor(0, 3);
+        lcd.print("Air temp2");
+
 
         radio.read(&sensorData, sizeof(sensorData));                  // Читаем данные в массив data и указываем сколько байт читать
 
@@ -106,8 +114,17 @@ void loop(){
         }
         
         SensorData sensorDuo = sensorData[1];
-        lcd.setCursor(9, 1);
+        lcd.setCursor(10, 1);
         lcd.print(sensorDuo.sensorValue);
+
+        SensorData humiditySensor = sensorData[2];
+        lcd.setCursor(10, 2);
+        lcd.print(humiditySensor.sensorValue);
+
+        SensorData airTemperatureSensor = sensorData[3];
+        lcd.setCursor(10, 3);
+        lcd.print(airTemperatureSensor.sensorValue);
+
         delay(100);
     } else {
         digitalWrite(radioStatusLedPin, 0);
