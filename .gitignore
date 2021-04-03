@@ -5,3 +5,4 @@
 .vscode/ipch
 lib/
 .DS_Store
+include/ThingSpeakApiKey.h
