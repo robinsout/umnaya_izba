@@ -77,7 +77,6 @@ void startTimer(MillisTimer &mt) {
 }
 
 void setup(){
-    Serial.begin(9600);
     initLcd();
     initRadio();
     resetTimer(timer);
@@ -93,10 +92,9 @@ void loop(){
         lcd.setCursor(0, 1);
         lcd.print("Air temp1");
         lcd.setCursor(0, 2);
-        lcd.print("Humidity");
-        lcd.setCursor(0, 3);
         lcd.print("Air temp2");
-
+        lcd.setCursor(0, 3);
+        lcd.print("Humidity");
 
         radio.read(&sensorData, sizeof(sensorData));                  // Читаем данные в массив data и указываем сколько байт читать
 
