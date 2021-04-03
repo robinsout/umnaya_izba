@@ -7,6 +7,15 @@
 #include "SensorData.h"
 SensorData sensorData[4];
 
+#include <SoftwareSerial.h>
+SoftwareSerial espSerial(9, 10);      // TX, RX on ESP8266
+
+#include "ThingSpeakApiKey.h"
+ThingSpeakApiKey thingSpeakApiKey;
+
+bool DEBUG = true;   //show more logs
+int responseTime = 2000; //communication timeout
+
 int radioStatusLedPin = A0;
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
@@ -17,6 +26,56 @@ MillisTimer timer = MillisTimer();
 bool timerStatus = false;
 String timerState = "OFF";
 unsigned long DEFAULT_TIMEOUT = 2400000;
+
+/*
+* Name: sendToWifi
+* Description: Function used to send data to ESP8266.
+* Params: command - the data/command to send; timeout - the time to wait for a response; debug - print to Serial window?(true = yes, false = no)
+* Returns: The response from the esp8266 (if there is a reponse)
+*/
+String sendToWifi(String command, const int timeout, boolean debug){
+  String response = "";
+  espSerial.println(command); // send the read character to the esp8266
+  long int time = millis();
+  while( (time+timeout) > millis())
+  {
+    while(espSerial.available())
+    {
+    // The esp has data so display its output to the serial window 
+    char c = espSerial.read(); // read the next character.
+    response+=c;
+    }  
+  }
+  if(debug)
+  {
+    Serial.println(response);
+  }
+  return response;
+}
+
+/*
+* Name: sendData
+* Description: Function used to send string to tcp client using cipsend
+* Params: 
+* Returns: void
+*/
+String sendData(String str, int responseTime, bool DEBUG){
+    sendToWifi("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80",responseTime,DEBUG);
+
+    String len="";
+    len+=str.length();
+    String response = "";
+    response += sendToWifi("AT+CIPSEND="+len,responseTime,DEBUG);
+    delay(100);
+    response += sendToWifi(str,responseTime,DEBUG);
+    delay(100);
+    return response;
+}
+
+void initSerial() {
+    Serial.begin(9600);
+    espSerial.begin(9600);
+}
 
 void initRadio() {
     radio.begin();                                        // Инициируем работу приёмника MX-RM-5V (в качестве параметра можно указать скорость ЧИСЛО бит/сек, тогда можно не вызывать функцию setDataRate)
@@ -80,12 +139,13 @@ void setup(){
     initLcd();
     initRadio();
     resetTimer(timer);
+    initSerial();
 
     pinMode(radioStatusLedPin, OUTPUT);
 }
 
 void loop(){
-    if(radio.available()){   
+    if(radio.available()){                          // Если вызвать функцию available с параметром в виде ссылки на переменную типа uint8_t, то мы получим номер трубы, по которой пришли данные (см. урок 26.5)
         digitalWrite(radioStatusLedPin, 25);
         lcd.setCursor(0, 0);
         lcd.print("Timer     ");
@@ -115,19 +175,25 @@ void loop(){
         lcd.setCursor(10, 1);
         lcd.print(sensorDuo.sensorValue);
 
-        SensorData humiditySensor = sensorData[2];
+        SensorData airTemperatureSensor = sensorData[2];
         lcd.setCursor(10, 2);
-        lcd.print(humiditySensor.sensorValue);
-
-        SensorData airTemperatureSensor = sensorData[3];
-        lcd.setCursor(10, 3);
         lcd.print(airTemperatureSensor.sensorValue);
 
-        delay(100);
+        SensorData humiditySensor = sensorData[3];
+        lcd.setCursor(10, 3);
+        lcd.print(humiditySensor.sensorValue);
+
+        String GET = "GET /update";
+        GET += "?api_key="+thingSpeakApiKey.apiKey;
+        GET += "&field1="+String(sensorDuo.sensorValue);
+        GET += "&field2="+String(airTemperatureSensor.sensorValue);
+        GET += "&field3="+String(humiditySensor.sensorValue);
+        GET += "\r\n\r\n";
+        sendData(GET,responseTime,DEBUG);
     } else {
         digitalWrite(radioStatusLedPin, 0);
-    }                                                    // Если вызвать функцию available с параметром в виде ссылки на переменную типа uint8_t, то мы получим номер трубы, по которой пришли данные (см. урок 26.5)
-    
+    }
+
     if (timer.isRunning() & !timer.expired()) {
         renderTimer(timer);
     }
