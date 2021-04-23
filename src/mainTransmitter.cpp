@@ -12,7 +12,7 @@
 SHT1x sht1x(dataPin, clockPin);
 
 iarduino_RF433_Transmitter radio(12);                     // Создаём объект radio для работы с библиотекой iarduino_RF433, указывая номер вывода к которому подключён передатчик
-SensorData sensorData[4];
+SensorData sensorData[5];
 
 const int ledPin = 13;
 
@@ -20,15 +20,15 @@ const int buttonPin = 2;
 bool buttonState = false;
 
 // // =========== Датчик температуры воды ============
-// // библиотека для работы с протоколом 1-Wire
-// #include <OneWire.h>
-// // библиотека для работы с датчиком DS18B20
-// #include <DallasTemperature.h>
-// // сигнальный провод датчика
-// #define ONE_WIRE_BUS 5
-// // создаём объект для работы с библиотекой OneWire
-// OneWire oneWire(ONE_WIRE_BUS);
-// DallasTemperature sensor(&oneWire);
+// библиотека для работы с протоколом 1-Wire
+#include <OneWire.h>
+// библиотека для работы с датчиком DS18B20
+#include <DallasTemperature.h>
+// сигнальный провод датчика
+#define ONE_WIRE_BUS 3
+// создаём объект для работы с библиотекой OneWire
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensor(&oneWire);
 // //==============================================
 
 void updateTimerButtonState() {
@@ -37,26 +37,23 @@ void updateTimerButtonState() {
   digitalWrite(ledPin, ledState);
 }
 
-// void initWaterTemperatureSensor() {
+void initWaterTemperatureSensor() {
   // =========== Датчик температуры воды ============
   // начинаем работу с датчиком
-  // sensor.begin();
+  sensor.begin();
   // устанавливаем разрешение датчика от 9 до 12 бит
-  // sensor.setResolution(12);
-  //==============================================
-// }
+  sensor.setResolution(12);
+  // ==============================================
+}
 
-// float getWaterTemperature() {
+float getWaterTemperature() {
   // =========== Датчик температуры воды ============
   // переменная для хранения температуры
-  // float waterTemperature;
   // отправляем запрос на измерение температуры
-  // sensor.requestTemperatures();
+  sensor.requestTemperatures();
   // считываем данные из регистра датчика
-  // waterTemperature = sensor.getTempCByIndex(0);
-  // выводим температуру в Serial-порт
-  // return waterTemperature;
-// }
+  return sensor.getTempCByIndex(0);
+}
 
 float getAirTemperature() {
   const int B = 4275;               // B value of the thermistor
@@ -91,7 +88,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(buttonPin), updateTimerButtonState, FALLING);
 
   initRadio();
-  // initWaterTemperatureSensor();
+  initWaterTemperatureSensor();
 }                                                       
 
 void loop() {
@@ -111,14 +108,13 @@ void loop() {
     sensorId: 4,
     sensorValue: getSteamRoomHumidity()
   };
-
-  // sensorData[4] = {
-  //   sensorId: 3,
-  //   sensorValue: getWaterTemperature()
-  // };
+  sensorData[4] = {
+    sensorId: 5,
+    sensorValue: getWaterTemperature()
+  };
 
   delay(1000);
 
-  Serial.println("Sending data");
+  Serial.println("Sending data ");
   radio.write(&sensorData, sizeof(sensorData));              // отправляем данные из массива data указывая сколько байт массива мы хотим отправить
 }

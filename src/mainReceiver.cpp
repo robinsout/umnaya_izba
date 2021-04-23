@@ -5,7 +5,7 @@
 #include "MillisTimer.h"
 
 #include "SensorData.h"
-SensorData sensorData[4];
+SensorData sensorData[5];
 
 #include <SoftwareSerial.h>
 SoftwareSerial espSerial(9, 10);      // TX, RX on ESP8266
@@ -150,9 +150,9 @@ void loop(){
         lcd.setCursor(0, 0);
         lcd.print("Timer     ");
         lcd.setCursor(0, 1);
-        lcd.print("Air temp1");
+        lcd.print("Water t");
         lcd.setCursor(0, 2);
-        lcd.print("Air temp2");
+        lcd.print("Air t");
         lcd.setCursor(0, 3);
         lcd.print("Humidity");
 
@@ -171,23 +171,26 @@ void loop(){
             }
         }
         
-        SensorData sensorDuo = sensorData[1];
+        SensorData waterTemperatureSensor = sensorData[4];
         lcd.setCursor(10, 1);
-        lcd.print(sensorDuo.sensorValue);
+        lcd.print(waterTemperatureSensor.sensorValue);
 
-        SensorData airTemperatureSensor = sensorData[2];
+        SensorData steamRoomAirTemperatureSensor = sensorData[2];
         lcd.setCursor(10, 2);
-        lcd.print(airTemperatureSensor.sensorValue);
+        lcd.print(steamRoomAirTemperatureSensor.sensorValue);
 
         SensorData humiditySensor = sensorData[3];
         lcd.setCursor(10, 3);
         lcd.print(humiditySensor.sensorValue);
 
+        SensorData roomAirTemperatureSensor = sensorData[1];
+
         String GET = "GET /update";
         GET += "?api_key="+thingSpeakApiKey.apiKey;
-        GET += "&field1="+String(sensorDuo.sensorValue);
-        GET += "&field2="+String(airTemperatureSensor.sensorValue);
+        GET += "&field1="+String(roomAirTemperatureSensor.sensorValue);
+        GET += "&field2="+String(steamRoomAirTemperatureSensor.sensorValue);
         GET += "&field3="+String(humiditySensor.sensorValue);
+        GET += "&field4="+String(waterTemperatureSensor.sensorValue);
         GET += "\r\n\r\n";
         sendData(GET,responseTime,DEBUG);
     } else {
